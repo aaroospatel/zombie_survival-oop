@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dead Zone — Survival</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="shell">
+
+    <!-- TOP HUD -->
+    <header class="hud">
+      <div class="hud-left">
+        <div class="logo">
+          <span class="logo-icon">◈</span>
+          <span class="logo-text">DEAD ZONE</span>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <div class="stat-pill">
+          <span class="pill-label">SCORE</span>
+          <span id="scoreDisplay" class="pill-val">0</span>
+        </div>
+        <div class="divider-dot"></div>
+        <div class="stat-pill">
+          <span class="pill-label">KILLS</span>
+          <span id="killsDisplay" class="pill-val">0</span>
+        </div>
+        <div class="divider-dot"></div>
+        <div class="stat-pill">
+          <span class="pill-label">TIME</span>
+          <span id="timeDisplay" class="pill-val">0:00</span>
+        </div>
+        <div class="divider-dot"></div>
+        <div class="stat-pill warn" id="spawnPill">
+          <span class="pill-label">THREAT</span>
+          <span id="spawnRateDisplay" class="pill-val">LOW</span>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <div class="ammo-block">
+          <span id="ammoDisplay" class="ammo-clip">12</span>
+          <span class="ammo-sep">/</span>
+          <span class="ammo-max">12</span>
+          <span id="reserveDisplay" class="ammo-reserve">· 48</span>
+        </div>
+        <div class="ammo-label">ASSAULT RIFLE</div>
+      </div>
+    </header>
+
+    <!-- ARENA -->
+    <main class="arena">
+      <canvas id="gameCanvas" width="860" height="520"></canvas>
+
+      <!-- START / GAME-OVER SCREEN -->
+      <div id="screenOverlay" class="screen">
+        <div id="startScreen" class="card">
+          <div class="card-eyebrow">OOP SURVIVAL GAME</div>
+          <h1 id="overlayTitle" class="card-title">Dead Zone</h1>
+          <p id="overlaySubtitle" class="card-sub">Zombies close in from every direction.<br>One touch means instant infection — game over.</p>
+
+          <div id="finalStats" class="results" style="display:none">
+            <div class="result-row">
+              <span class="r-label">Score</span>
+              <span id="finalScoreVal" class="r-val accent">—</span>
+            </div>
+            <div class="result-row">
+              <span class="r-label">Best</span>
+              <span id="finalBestVal" class="r-val">—</span>
+            </div>
+            <div class="result-row">
+              <span class="r-label">Kills</span>
+              <span id="finalKillsVal" class="r-val">—</span>
+            </div>
+            <div class="result-row">
+              <span class="r-label">Survived</span>
+              <span id="finalTimeVal" class="r-val">—</span>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button id="actionBtn" class="btn-primary">Play</button>
+            <button id="manualBtnOverlay" class="btn-ghost">How to Play</button>
+          </div>
+
+          <div class="key-hints">
+            <span><kbd>WASD</kbd> Move</span>
+            <span><kbd>Click</kbd> Shoot</span>
+            <span><kbd>R</kbd> Reload</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANUAL MODAL -->
+      <div id="manualModal" class="screen" style="display:none">
+        <div class="card manual-card">
+          <h2 class="card-title small">How to Play</h2>
+          <div class="manual-body">
+            <section class="m-section">
+              <h3>Controls</h3>
+              <div class="m-row"><kbd>W A S D</kbd><span>Move survivor</span></div>
+              <div class="m-row"><kbd>Mouse + Click</kbd><span>Aim &amp; shoot</span></div>
+              <div class="m-row"><kbd>I J K L</kbd><span>Keyboard shoot (↑←↓→)</span></div>
+              <div class="m-row"><kbd>R</kbd><span>Reload rifle</span></div>
+              <div class="m-row"><kbd>H</kbd><span>Toggle this screen</span></div>
+              <div class="m-row"><kbd>Q</kbd><span>Quit round</span></div>
+            </section>
+            <section class="m-section">
+              <h3>Enemies</h3>
+              <div class="m-row">
+                <span class="tag green">Z</span>
+                <span>Walker — slow, 1 shot, 10 pts</span>
+              </div>
+              <div class="m-row">
+                <span class="tag orange">F</span>
+                <span>Runner — fast, 1 shot, 20 pts</span>
+              </div>
+              <div class="m-row">
+                <span class="tag red">T</span>
+                <span>Tank — slow, 3 shots, 50 pts</span>
+              </div>
+            </section>
+            <section class="m-section">
+              <h3>OOP Design</h3>
+              <p class="m-note">
+                <strong>Encapsulation</strong> — private fields guard all state.<br>
+                <strong>Inheritance</strong> — Entity → Player, Zombie → subtypes.<br>
+                <strong>Polymorphism</strong> — virtual <code>update</code>, <code>takeDamage</code>, <code>render</code>.<br>
+                <strong>Abstraction</strong> — GameEngine hides the full simulation loop.<br>
+                <strong>Composition</strong> — Player owns a Gun instance.
+              </p>
+            </section>
+          </div>
+          <button id="closeManualBtn" class="btn-ghost">Close</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- BOTTOM STATUS BAR -->
+    <footer class="statusbar">
+      <span id="statusMessage" class="status-text">Press Play or Space to start.</span>
+      <div class="sb-controls">
+        <button id="btnManual" class="sb-btn">How to Play <span class="key">H</span></button>
+        <button id="btnReload" class="sb-btn">Reload <span class="key">R</span></button>
+        <button id="btnQuit" class="sb-btn danger">Quit <span class="key">Q</span></button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
