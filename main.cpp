@@ -7,30 +7,24 @@
 
 using namespace std;
 
-// ============================================================================
-// 1. ABSTRACTION & ENCAPSULATION: Base Entity Class
-// ============================================================================
 class Entity {
 protected:
-    int x, y;          // Position coordinates
-    char symbol;       // Display character ('P', 'Z', etc.)
+    int x, y;
+    char symbol;
     bool alive;
 
 public:
     Entity(int startX, int startY, char sym) 
         : x(startX), y(startY), symbol(sym), alive(true) {}
     
-    virtual ~Entity() {} // Virtual destructor for safe polymorphic cleanup
+    virtual ~Entity() {}
 
-    // Pure Virtual Function (Abstraction: Must be implemented by derived classes)
     virtual void update() = 0;
 
-    // Virtual Function (Polymorphism: Can be overridden)
     virtual void takeDamage(int amount) {
         (void)amount;
     }
 
-    // Encapsulation: Controlled Getters & Setters
     int getX() const { return x; }
     int getY() const { return y; }
     void setPosition(int newX, int newY) { x = newX; y = newY; }
@@ -39,9 +33,6 @@ public:
     void setAlive(bool state) { alive = state; }
 };
 
-// ============================================================================
-// 2. ENCAPSULATION: Gun Class (Single Weapon)
-// ============================================================================
 class Gun {
 private:
     string name;
@@ -57,7 +48,7 @@ public:
 
     bool shoot() {
         if (ammoInClip <= 0) {
-            return false; // Out of ammo in current clip
+            return false;
         }
         ammoInClip--;
         return true;
@@ -76,7 +67,6 @@ public:
         totalAmmo += amount;
     }
 
-    // Encapsulation: Getters
     string getName() const { return name; }
     int getDamage() const { return damage; }
     int getRange() const { return range; }
@@ -85,27 +75,22 @@ public:
     int getTotalAmmo() const { return totalAmmo; }
 };
 
-// ============================================================================
-// 3. INHERITANCE & COMPOSITION: Player Class
-// ============================================================================
 class Player : public Entity {
 private:
     int score;
     int kills;
-    Gun gun; // Composition: Player HAS-A Gun
+    Gun gun;
 
 public:
     Player(int startX = 10, int startY = 6) 
         : Entity(startX, startY, 'P'), score(0), kills(0), gun("Assault Rifle", 25, 7, 12, 48) {}
 
     void update() override {
-        // Player state update logic if needed
     }
 
     void move(int dx, int dy, int mapWidth, int mapHeight) {
         int nextX = x + dx;
         int nextY = y + dy;
-        // Keep within map borders
         if (nextX >= 1 && nextX < mapWidth - 1 && nextY >= 1 && nextY < mapHeight - 1) {
             x = nextX;
             y = nextY;
@@ -123,7 +108,6 @@ public:
     void addKill(int points) {
         kills++;
         score += points;
-        // Bonus ammo drop every 3 kills
         if (kills % 3 == 0) {
             gun.addReserveAmmo(6);
         }
@@ -134,20 +118,16 @@ public:
     const Gun& getGun() const { return gun; }
 };
 
-// ============================================================================
-// 4. INHERITANCE & POLYMORPHISM: Zombie Base Class & Specialized Types
-// ============================================================================
 class Zombie : public Entity {
 protected:
     int health;
     int scoreValue;
-    int moveFrequency; // How often this zombie takes a step (e.g. 2 = every 2 turns)
+    int moveFrequency;
 
 public:
     Zombie(int startX, int startY, char sym, int hp, int scoreVal, int freq = 2)
         : Entity(startX, startY, sym), health(hp), scoreValue(scoreVal), moveFrequency(freq) {}
 
-    // Polymorphism: Derived zombies can override damage behavior
     void takeDamage(int amount) override {
         health -= amount;
         if (health <= 0) {
@@ -155,12 +135,10 @@ public:
         }
     }
 
-    // AI Movement towards Player
     virtual void moveTowards(int targetX, int targetY) {
         int dx = (targetX > x) ? 1 : ((targetX < x) ? -1 : 0);
         int dy = (targetY > y) ? 1 : ((targetY < y) ? -1 : 0);
 
-        // Move along the axis that is further away
         if (abs(targetX - x) > abs(targetY - y)) {
             x += dx;
         } else if (dy != 0) {
@@ -170,7 +148,6 @@ public:
         }
     }
 
-    // Pure virtual method: Polymorphic description
     virtual string getType() const = 0;
 
     int getScoreValue() const { return scoreValue; }
@@ -178,48 +155,42 @@ public:
     int getMoveFrequency() const { return moveFrequency; }
 };
 
-// --- Derived Zombie 1: Normal Walker ---
 class NormalZombie : public Zombie {
 public:
     NormalZombie(int startX, int startY) 
-        : Zombie(startX, startY, 'Z', 25, 10, 2) {} // Moves every 2 turns (slower walker)
+        : Zombie(startX, startY, 'Z', 25, 10, 2) {}
 
     void update() override {}
     string getType() const override { return "Normal Zombie"; }
 };
 
-// --- Derived Zombie 2: Fast Runner ---
 class FastZombie : public Zombie {
 public:
     FastZombie(int startX, int startY) 
-        : Zombie(startX, startY, 'F', 20, 20, 1) {} // Moves every 1 turn (faster than walker)
+        : Zombie(startX, startY, 'F', 20, 20, 1) {}
 
     void update() override {}
     string getType() const override { return "Fast Zombie"; }
 };
 
-// --- Derived Zombie 3: Tank Juggernaut ---
 class TankZombie : public Zombie {
 public:
     TankZombie(int startX, int startY) 
-        : Zombie(startX, startY, 'T', 75, 50, 3) {} // Moves every 3 turns (slow heavy brute)
+        : Zombie(startX, startY, 'T', 75, 50, 3) {}
 
     void update() override {}
     string getType() const override { return "Tank Zombie"; }
 };
 
-// ============================================================================
-// 5. ABSTRACTION & ENGINE: GameEngine Class
-// ============================================================================
 class GameEngine {
 private:
     const int MAP_WIDTH = 25;
     const int MAP_HEIGHT = 14;
 
     Player player;
-    vector<Zombie*> zombies; // Polymorphic collection of zombies
+    vector<Zombie*> zombies;
     int turnCount;
-    int spawnInterval;       // Decreases over time to increase spawn rate
+    int spawnInterval;
     bool isRunning;
     string lastMessage;
 
@@ -245,14 +216,13 @@ public:
         cleanZombies();
         player = Player(MAP_WIDTH / 2, MAP_HEIGHT / 2);
         turnCount = 1;
-        spawnInterval = 5; // Balanced 5-turn spawn interval
+        spawnInterval = 5;
         isRunning = true;
         lastMessage = "New game started! Good luck, survivor.";
         spawnZombie();
     }
 
     void spawnZombie() {
-        // Spawn randomly at borders
         int side = rand() % 4;
         int sx = 1, sy = 1;
         if (side == 0) { sx = 1 + rand() % (MAP_WIDTH - 2); sy = 1; }
@@ -278,7 +248,6 @@ public:
             return;
         }
 
-        // Raycast bullet
         int range = player.getGun().getRange();
         int damage = player.getGun().getDamage();
         bool hit = false;
@@ -333,7 +302,6 @@ public:
     }
 
     void render() {
-        // Clear screen
         cout << "\033[2J\033[1;1H";
 
         cout << "=======================================================\n";
@@ -346,7 +314,6 @@ public:
              << " (Reserve: " << player.getGun().getTotalAmmo() << ")\n";
         cout << "-------------------------------------------------------\n";
 
-        // Build grid
         vector<string> grid(MAP_HEIGHT, string(MAP_WIDTH, '.'));
         for (int y = 0; y < MAP_HEIGHT; ++y) {
             for (int x = 0; x < MAP_WIDTH; ++x) {
@@ -356,17 +323,14 @@ public:
             }
         }
 
-        // Place Zombies
         for (Zombie* z : zombies) {
             if (z->isAlive()) {
                 grid[z->getY()][z->getX()] = z->getSymbol();
             }
         }
 
-        // Place Player
         grid[player.getY()][player.getX()] = player.getSymbol();
 
-        // Print Grid with Legend
         for (int y = 0; y < MAP_HEIGHT; ++y) {
             cout << "  " << grid[y];
             if (y == 2)  cout << "   LEGEND:";
@@ -395,7 +359,6 @@ public:
 
             bool actionTaken = false;
 
-            // Player Actions
             if (cmd == 'w' || cmd == 'W') { player.move(0, -1, MAP_WIDTH, MAP_HEIGHT); actionTaken = true; }
             else if (cmd == 's' || cmd == 'S') { player.move(0, 1, MAP_WIDTH, MAP_HEIGHT); actionTaken = true; }
             else if (cmd == 'a' || cmd == 'A') { player.move(-1, 0, MAP_WIDTH, MAP_HEIGHT); actionTaken = true; }
@@ -417,11 +380,9 @@ public:
                 return;
             }
 
-            // If a gameplay turn was taken:
             if (actionTaken) {
                 turnCount++;
 
-                // 1. Clean dead zombies
                 for (auto it = zombies.begin(); it != zombies.end(); ) {
                     if (!(*it)->isAlive()) {
                         delete *it;
@@ -431,15 +392,12 @@ public:
                     }
                 }
 
-                // 2. Slower Zombies move toward player according to their individual move frequency
                 for (Zombie* z : zombies) {
                     if (z->isAlive()) {
-                        // Slower movement: only step when turn aligns with frequency
                         if (turnCount % z->getMoveFrequency() == 0) {
                             z->moveTowards(player.getX(), player.getY());
                         }
 
-                        // Collision check: If any zombie touches player -> GAME OVER!
                         if (z->getX() == player.getX() && z->getY() == player.getY()) {
                             render();
                             cout << "\n=======================================================\n";
@@ -464,7 +422,6 @@ public:
                     }
                 }
 
-                // 3. Dynamic Respawn: Moderated spawn rate with gradual acceleration
                 if (turnCount > 35 && spawnInterval > 3) spawnInterval = 3;
                 else if (turnCount > 18 && spawnInterval > 4) spawnInterval = 4;
 
@@ -476,9 +433,6 @@ public:
     }
 };
 
-// ============================================================================
-// MAIN ENTRY POINT
-// ============================================================================
 int main() {
     GameEngine game;
     bool inMenu = true;

@@ -625,6 +625,8 @@ class GameEngine {
     // UI elements
     this.scoreDisplay = document.getElementById("scoreDisplay");
     this.highScoreDisplay = document.getElementById("highScoreDisplay");
+    this.startBestBadge = document.getElementById("startBestBadge");
+    this.startBestVal = document.getElementById("startBestVal");
     this.killsDisplay = document.getElementById("killsDisplay");
     this.timeDisplay = document.getElementById("timeDisplay");
     this.spawnRateDisplay = document.getElementById("spawnRateDisplay");
@@ -644,9 +646,9 @@ class GameEngine {
 
     this.manualModal = document.getElementById("manualModal");
 
-    // Load High Score
-    this.highScore = parseInt(localStorage.getItem("zombie_highscore") || "0", 10);
-    if (this.highScoreDisplay) this.highScoreDisplay.textContent = this.highScore;
+    // Load High Score safely from browser localStorage (zero external database)
+    this.highScore = this.loadHighScore();
+    this.updateHighScoreUI();
 
     // Game state
     this.player = null;
@@ -747,6 +749,40 @@ class GameEngine {
     });
   }
 
+  loadHighScore() {
+    try {
+      const saved = localStorage.getItem("deadzone_best_score") || localStorage.getItem("zombie_highscore");
+      return saved ? parseInt(saved, 10) || 0 : 0;
+    } catch (e) {
+      return 0; // Fallback if browser privacy settings restrict localStorage
+    }
+  }
+
+  saveHighScore(newScore) {
+    this.highScore = newScore;
+    try {
+      localStorage.setItem("deadzone_best_score", newScore.toString());
+      localStorage.setItem("zombie_highscore", newScore.toString());
+    } catch (e) {
+      // Graceful fallback
+    }
+    this.updateHighScoreUI();
+  }
+
+  updateHighScoreUI() {
+    if (this.highScoreDisplay) {
+      this.highScoreDisplay.textContent = this.highScore;
+    }
+    if (this.startBestBadge && this.startBestVal) {
+      if (this.highScore > 0) {
+        this.startBestVal.textContent = `${this.highScore} PTS`;
+        this.startBestBadge.style.display = "flex";
+      } else {
+        this.startBestBadge.style.display = "none";
+      }
+    }
+  }
+
   toggleManual() {
     this.manualModal.style.display = (this.manualModal.style.display === "none") ? "flex" : "none";
   }
@@ -774,6 +810,7 @@ class GameEngine {
 
     this.overlay.style.display = "none";
     this.finalStats.style.display = "none";
+    if (this.startBestBadge) this.startBestBadge.style.display = "none";
     this.actionBtn.textContent = "Play";
     this.overlayTitle.textContent = "Dead Zone";
     this.overlaySubtitle.textContent = "Zombies close in from every direction.\nOne touch means instant infection — game over.";
@@ -852,22 +889,27 @@ class GameEngine {
     this.isGameOver = true;
     sfx.playGameOver();
 
-    // High Score tracking
+    // High Score tracking via localStorage
+    const isNewRecord = this.player.score > 0 && this.player.score >= this.highScore;
     if (this.player.score > this.highScore) {
-      this.highScore = this.player.score;
-      localStorage.setItem("zombie_highscore", this.highScore.toString());
-      if (this.highScoreDisplay) this.highScoreDisplay.textContent = this.highScore;
+      this.saveHighScore(this.player.score);
     }
 
-    this.overlayTitle.textContent = "Infected";
-    this.overlaySubtitle.textContent = reason || "A zombie caught you. No second chances.";
+    this.overlayTitle.textContent = isNewRecord ? "New Record!" : "Infected";
+    this.overlaySubtitle.textContent = isNewRecord
+      ? `Outstanding survival! You set a new all-time high score of ${this.highScore} PTS.`
+      : (reason || "A zombie caught you. No second chances.");
 
     // Fill in Scorecard
     if (this.finalScoreVal) this.finalScoreVal.textContent = `${this.player.score} PTS`;
-    if (this.finalBestVal) this.finalBestVal.textContent = `${this.highScore} PTS`;
+    if (this.finalBestVal) {
+      this.finalBestVal.textContent = `${this.highScore} PTS`;
+      this.finalBestVal.classList.toggle("accent", isNewRecord);
+    }
     if (this.finalKillsVal) this.finalKillsVal.textContent = this.player.kills.toString();
     if (this.finalTimeVal) this.finalTimeVal.textContent = `${Math.floor(this.elapsedTime)}s`;
 
+    if (this.startBestBadge) this.startBestBadge.style.display = "none";
     this.finalStats.style.display = "block";
     this.actionBtn.textContent = "Try Again";
     this.overlay.style.display = "flex";
@@ -949,6 +991,9 @@ class GameEngine {
 
     // 5. Update HUD Displays
     this.scoreDisplay.textContent = this.player.score;
+    if (this.player.score > this.highScore) {
+      this.saveHighScore(this.player.score);
+    }
     this.killsDisplay.textContent = this.player.kills;
     this.timeDisplay.textContent = `${Math.floor(this.elapsedTime)}s`;
     this.ammoDisplay.textContent = this.player.gun.ammoInClip;

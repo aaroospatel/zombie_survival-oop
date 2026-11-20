@@ -24,6 +24,11 @@
 
       <div class="hud-center">
         <div class="stat-pill">
+          <span class="pill-label">BEST</span>
+          <span id="highScoreDisplay" class="pill-val accent">0</span>
+        </div>
+        <div class="divider-dot"></div>
+        <div class="stat-pill">
           <span class="pill-label">SCORE</span>
           <span id="scoreDisplay" class="pill-val">0</span>
         </div>
@@ -65,6 +70,11 @@
           <div class="card-eyebrow">OOP SURVIVAL GAME</div>
           <h1 id="overlayTitle" class="card-title">Dead Zone</h1>
           <p id="overlaySubtitle" class="card-sub">Zombies close in from every direction.<br>One touch means instant infection — game over.</p>
+
+          <div id="startBestBadge" class="best-badge" style="display:none">
+            <span class="badge-label">ALL-TIME BEST</span>
+            <span id="startBestVal" class="badge-val">0 PTS</span>
+          </div>
 
           <div id="finalStats" class="results" style="display:none">
             <div class="result-row">

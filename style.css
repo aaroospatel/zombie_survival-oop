@@ -108,6 +108,10 @@ html, body {
   color: var(--text);
 }
 
+.pill-val.accent {
+  color: var(--accent);
+}
+
 .divider-dot {
   width: 3px;
   height: 3px;
@@ -239,6 +243,31 @@ canvas {
   color: var(--text-dim);
   text-align: center;
   line-height: 1.6;
+}
+
+/* ─── ALL-TIME BEST BADGE ────────────────────────────── */
+.best-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  border-radius: 999px;
+  padding: 5px 14px;
+}
+
+.badge-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.badge-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
 }
 
 /* ─── RESULTS ────────────────────────────────────────── */
